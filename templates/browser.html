@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<title>词频分析</title>
+<h1>词频分析</h1>
+<a href="{{ url_for('upload_file') }}">文件上传</a> /
+<a href="{{ url_for('manage_file') }}">文件管理</a>
+<hr>
+
+<p>文档: {{ filename }}</p>
+<hr>
+{% for text in texts %}
+<div>{{ text }}</div>
+{% endfor %}
+<hr>
