@@ -16,7 +16,7 @@ INDEX_ROOT_PATH = os.path.join(RESOURCE_PATH, 'indexs')
 if not os.path.exists(INDEX_ROOT_PATH):
     os.mkdir(INDEX_ROOT_PATH)
 # 分词字典
-PHRASES_PATH = os.path.join(RESOURCE_PATH, 'phrases', 'words.txt')
+PHRASES_PATH = os.path.join(RESOURCE_PATH, 'phrases', 'phrases.txt')
 if not os.path.exists(os.path.dirname(PHRASES_PATH)):
     os.mkdir(os.path.dirname(PHRASES_PATH))
 

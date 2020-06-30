@@ -105,8 +105,9 @@ class DocumentSearch():
         if os.path.exists(index_path):
             with open(index_path, 'rb')as f:
                 self.index = pickle.load(f)
-            with open(PHRASES_PATH, 'rb')as f:
+            with open(PHRASES_PATH, 'r', encoding="utf-8")as f:
                 lines = f.readlines()
+                lines = [line.strip() for line in lines]
                 self.participles = lines
             jieba.load_userdict(PHRASES_PATH)
         else:
@@ -117,6 +118,8 @@ class DocumentSearch():
                     continue
                 document_names = os.listdir(field_path)
                 for document_name in tqdm(document_names[:], desc="document"):
+                    if document_name != "C11-Space0004.txt" and document_name != "C11-Space1197.txt":
+                        continue
                     document_path = os.path.join(field_path, document_name)
                     document_texts = self.read_file(document_path)
                     if document_texts is None:
@@ -124,14 +127,16 @@ class DocumentSearch():
                     sentences = self.cut_sentence(document_texts)
                     words = self.cut_word(sentences)
                     uniq_phrases, repeat_phrases = self.cut_phrase(sentences)
-                    # 向jieba中加入短语
-                    [jieba.add_word(phrase) for phrase in uniq_phrases]
+                    # # 向jieba中加入短语
+                    # [jieba.add_word(phrase) for phrase in uniq_phrases]
                     self.participles.extend(uniq_phrases)
                     words.extend(repeat_phrases)
                     self.create_inverted_index(words, field_name, document_name, sentences)
             with open(index_path, 'wb') as fi, open(PHRASES_PATH, "w", encoding="utf-8") as fw:
                 pickle.dump(self.index, fi)
                 fw.write("\n".join(self.participles))
+            # 向jieba中加入短语
+            [jieba.add_word(phrase) for phrase in self.participles]
 
     def auto_correct_sentence(self, query):
         """
@@ -167,7 +172,7 @@ class DocumentSearch():
 
 
 if __name__ == '__main__':
-    text = "科技路径怎么走科技路径怎么装配工装智能化设计"
+    text = "装配工装智能化设计"
     doc = DocumentSearch()
     state, co_text = doc.auto_correct_sentence(text)
     result = doc.search(co_text)

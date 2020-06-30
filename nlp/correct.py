@@ -19,7 +19,7 @@ PUNCTUATION_LIST += '。，？：；｛｝［］‘“”《》／！％……�
 
 def construct_dict(file_path):
     word_freq = {}
-    with open(file_path, "rb") as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         for line in f:
             info = line.split()
             word = info[0]
@@ -113,7 +113,7 @@ def auto_correct_sentence(error_sentence, verbose=True, words=None):
         # check if item is a punctuation
         if phrase not in PUNCTUATION_LIST:
             # check if the phrase in our dict, if not then it is a misspelled phrase
-            if f"{phrase}\r\n".encode('utf-8') not in words:
+            if phrase not in words:
                 correct_phrase = auto_correct(phrase)
                 if verbose:
                     pass
