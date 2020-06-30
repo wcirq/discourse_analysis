@@ -100,7 +100,7 @@ class DocumentSearch():
             else:
                 self.index[word] = [dic_word_count[word]]
 
-    def init_index(self, version=1):
+    def init_index(self, version=2):
         index_path = os.path.join(INDEX_ROOT_PATH, f"{version}.dict")
         if os.path.exists(index_path):
             with open(index_path, 'rb')as f:
@@ -112,14 +112,14 @@ class DocumentSearch():
             jieba.load_userdict(PHRASES_PATH)
         else:
             field_names = os.listdir(self.root)
-            for field_name in tqdm(field_names[:2], desc="field"):
+            for field_name in tqdm(field_names[:5], desc="field"):
                 field_path = os.path.join(self.root, field_name)
                 if os.path.isfile(field_path):
                     continue
                 document_names = os.listdir(field_path)
                 for document_name in tqdm(document_names[:], desc="document"):
-                    if document_name != "C11-Space0004.txt" and document_name != "C11-Space1197.txt":
-                        continue
+                    # if document_name != "C11-Space0004.txt" and document_name != "C11-Space1197.txt":
+                    #     continue
                     document_path = os.path.join(field_path, document_name)
                     document_texts = self.read_file(document_path)
                     if document_texts is None:
@@ -160,7 +160,7 @@ class DocumentSearch():
         result = {}
         for word, docs in datas.items():
             result[word] = []
-            for info in docs:
+            for info in docs[:10]:
                 file_path = os.path.join(self.root, info[0], info[1])
                 document_texts = self.read_file(file_path)
                 if document_texts is None:
@@ -172,7 +172,7 @@ class DocumentSearch():
 
 
 if __name__ == '__main__':
-    text = "装配工装智能化设计"
+    text = "工人在巴黎哪裏"
     doc = DocumentSearch()
     state, co_text = doc.auto_correct_sentence(text)
     result = doc.search(co_text)
