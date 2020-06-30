@@ -2,11 +2,11 @@
 <title>词频分析</title>
 <h1>词频分析</h1>
 <a href="{{ url_for('upload_file') }}">文件上传</a> /
-<a href="{{ url_for('manage_file') }}">文件管理</a>
+<a href="{{ url_for('manage_dir') }}">文件管理</a>
 <hr>
 
 {% for photo in files_list %}
-    - {{ photo }}
+    -- {{ photo }}
     <a href="{{ url_for('open_file', filename=photo) }}">打开</a>
     <a href="{{ url_for('word_counts', filename=photo) }}">词频</a>
     <a href="{{ url_for('phrase_counts', filename=photo) }}">短语频率</a>

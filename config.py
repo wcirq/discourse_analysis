@@ -22,6 +22,8 @@ if not os.path.exists(os.path.dirname(PHRASES_PATH)):
 
 # 数据路径
 DATA_PATH = os.path.join(RESOURCE_PATH, 'data')
+# 静态文件路径
+STATIC_PATH = os.path.join(BASE_DIR, 'static')
 
 
 # 数据路径

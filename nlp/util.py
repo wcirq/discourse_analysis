@@ -3,15 +3,30 @@
 # @Author wcy
 import os
 import re
+
+import chardet
 import numpy as np
+
+from common.logger_config import logger
 
 
 def read_txt(filename_path):
-    with open(filename_path, "r", encoding="utf-8") as f:
-        lines = f.readlines()
-        lines = [line.strip("\n") for line in lines]
-    datas = "".join(lines)
-    datas = re.split('[,。.，！!?？；;]', datas)
+    try:
+        bytes = min(2048, os.path.getsize(filename_path))
+        raw = open(filename_path, 'rb').read(bytes)
+        result = chardet.detect(raw)
+        encoding = result['encoding']
+
+        with open(filename_path, "rb") as infile:
+            lines = infile.readlines()
+            datas = [data.decode(encoding) for data in lines]
+        datas = [data.strip("\n") for data in datas]
+        datas = "".join(datas)
+        datas = re.split('[,。.，！!?？；;]', datas)
+    except Exception as e:
+        logger.error(filename_path)
+        return [""]
+
     return datas
 
 

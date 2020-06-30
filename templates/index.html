@@ -2,16 +2,17 @@
 <title>词频分析</title>
 <h1>词频分析</h1>
 <a href="{{ url_for('upload_file') }}">文件上传</a> /
-<a href="{{ url_for('manage_file') }}">文件管理</a>
+<a href="{{ url_for('manage_dir') }}">文件管理</a>
 <hr>
 
 <form method="POST" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
-    {{ form.photo(multiple="multiple")}}
+    <label>所属领域：</label>{{ form.field_name }}<br/>
+    <label>选择文件：</label>{{ form.select_field }} <div style="width:200px; height:30px; border:2px solid #b8dcff;margin-top: 10px;">{{ form.photo(multiple="multiple")}}</div><br/>
     {% for error in form.photo.errors %}
         <span style="color: red;">{{ error }}</span>
     {% endfor %}
-    {{ form.submit }}
+    <br/>{{ form.submit }}
 </form>
 
 {% if success %}
