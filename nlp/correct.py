@@ -12,7 +12,7 @@ from xpinyin import Pinyin
 # FILE_PATH = "HW10/Autochecker4Chinese-master/token_freq_pos%40350k_jieba.txt"
 from config import DATA_PATH
 
-FILE_PATH = os.path.join(DATA_PATH, "token_freq_pos%40350k_jieba.txt")
+FILE_PATH = os.path.join(DATA_PATH, "token_freq_pos_40350k_jieba.txt")
 PUNCTUATION_LIST = string.punctuation
 PUNCTUATION_LIST += '。，？：；｛｝［］‘“”《》／！％……（）'
 
