@@ -17,7 +17,7 @@
 {% for value in word_counts %}
     <tr>
     <td>{{ value[0] }}</td>
-    <td><a href="{{ url_for('mach_word', filename=filename, word=value[0]) }}">{{ value[1] }}</a></td>
+    <td><a href="{{ url_for('match_word', field_name=field_name, filename=filename, word=value[0]) }}">{{ value[1] }}</a></td>
     </tr>
 {% endfor %}
 </table>

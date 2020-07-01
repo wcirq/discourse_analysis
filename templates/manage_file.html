@@ -9,8 +9,8 @@
 
 {% for photo in files_list %}
     -- {{ photo }}
-    <a href="{{ url_for('open_file', filename=photo) }}">打开</a>
-    <a href="{{ url_for('word_counts', filename=photo) }}">词频</a>
-    <a href="{{ url_for('phrase_counts', filename=photo) }}">短语频率</a>
-    <a href="{{ url_for('delete_file', filename=photo) }}">删除</a><br>
+    <a href="{{ url_for('open_file', filename=photo, field_name=field_name) }}">打开</a>
+    <a href="{{ url_for('word_counts', filename=photo, field_name=field_name) }}">词频</a>
+    <a href="{{ url_for('phrase_counts', filename=photo, field_name=field_name) }}">短语频率</a>
+    <a href="{{ url_for('delete_file', filename=photo, field_name=field_name) }}">删除</a><br>
 {% endfor %}

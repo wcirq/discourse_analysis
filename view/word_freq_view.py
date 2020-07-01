@@ -6,11 +6,14 @@ import os
 import re
 import shutil
 import time
+from random import shuffle
 
 from flask import render_template, request, redirect, url_for, jsonify
 from wtforms.validators import DataRequired, Length
 import threading
-from config import STATIC_PATH
+
+from common.logger_config import logger
+from config import STATIC_PATH, PHRASES_PATH
 from nlp.retrieve_analyze import DocumentSearch
 from nlp.subject_analyze import read_corpus_file, analyze_word_likelihood, analyze_phrase_likelihood
 from nlp.util import read_txt
@@ -65,28 +68,31 @@ def upload_file():
     return render_template('index.html', form=form, success=success)
 
 
-@app.route('/word_counts/<filename>')
-def word_counts(filename):
-    path = os.path.join(app.config['UPLOADED_PHOTOS_DEST'], filename)
+@app.route('/word_counts/<field_name>/<filename>')
+def word_counts(field_name, filename):
+    file_path = os.path.join(field_name, filename)
+    path = os.path.join(app.config['UPLOADED_PHOTOS_DEST'], file_path)
     datas = read_txt(path)
     datas = "".join(datas)
     word_counts = analyze_word(datas)
+    word_counts = {k:v for k, v in word_counts.items() if len(k)>1}
     word_counts = sorted(word_counts.items(), key=lambda d: d[1], reverse=True)
-    return render_template('word_count.html', filename=filename, word_counts=word_counts)
+    return render_template('word_count.html', field_name=field_name, filename=filename, word_counts=word_counts)
 
 
-@app.route('/phrase_counts/<filename>')
-def phrase_counts(filename):
-    path = os.path.join(app.config['UPLOADED_PHOTOS_DEST'], filename)
+@app.route('/phrase_counts/<field_name>/<filename>')
+def phrase_counts(field_name, filename):
+    file_path = os.path.join(field_name, filename)
+    path = os.path.join(app.config['UPLOADED_PHOTOS_DEST'], file_path)
     datas = read_txt(path)
     phrase_counts = analyze_phrase(datas)
     phrase_counts = sorted(phrase_counts.items(), key=lambda d: d[1], reverse=True)
-    return render_template('word_count.html', filename=filename, word_counts=phrase_counts)
+    return render_template('word_count.html', field_name=field_name, filename=filename, word_counts=phrase_counts)
 
 
-@app.route('/mach_word/<filename>/<word>')
-def mach_word(filename, word):
-    path = os.path.join(app.config['UPLOADED_PHOTOS_DEST'], filename)
+@app.route('/match_word/<field_name>/<filename>/<word>')
+def match_word(field_name, filename, word):
+    path = os.path.join(app.config['UPLOADED_PHOTOS_DEST'], field_name, filename)
     lines = read_txt(path)
     results = [len(re.findall(word, line)) for line in lines]
     return render_template('position.html', filename=filename, lines=lines, results=results, lenght=len(lines),
@@ -97,8 +103,7 @@ def mach_word(filename, word):
 def manage_file(field_name):
     file_path = os.path.join(STATIC_PATH, field_name)
     files_list = os.listdir(file_path)
-    files_list = [os.path.join(field_name, file) for file in files_list]
-    return render_template('manage_file.html', files_list=files_list)
+    return render_template('manage_file.html', files_list=files_list, field_name=field_name)
 
 
 @app.route('/manage_dir')
@@ -107,25 +112,33 @@ def manage_dir():
     return render_template('manage_dir.html', dir_list=dir_list)
 
 
-@app.route('/open/<filename>')
-def open_file(filename):
+@app.route('/open/<field_name>/<filename>')
+def open_file(filename, field_name):
     file_url = photos.url(filename)
-    path = os.path.join(app.config['UPLOADED_PHOTOS_DEST'], filename)
+    file_path = os.path.join(field_name, filename)
+    path = os.path.join(app.config['UPLOADED_PHOTOS_DEST'], file_path)
     lines = read_txt(path)
     return render_template('browser.html', filename=filename, texts=lines)
 
 
-@app.route('/delete/<filename>')
-def delete_file(filename):
-    file_path = photos.path(filename)
+@app.route('/delete_dir/<field_name>')
+def delete_dir(field_name):
+    dir_path = os.path.join(app.config['UPLOADED_PHOTOS_DEST'], field_name)
+    if not os.path.exists(dir_path):
+        return redirect(url_for('manage_dir'))
+    shutil.rmtree(dir_path)
+    return redirect(url_for('manage_dir'))
+
+
+@app.route('/delete_file/<field_name>/<filename>')
+def delete_file(field_name, filename):
+    file_path = os.path.join(field_name, filename)
+    # file_path = photos.path(file_path)
+    file_path = os.path.join(app.config['UPLOADED_PHOTOS_DEST'], file_path)
     if not os.path.exists(file_path):
         return redirect(url_for('manage_dir'))
-    if os.path.isfile(file_path):
-        os.remove(file_path)
-        return redirect(url_for('manage_file', field_name=os.path.dirname(filename)))
-    else:
-        shutil.rmtree(file_path)
-        return redirect(url_for('manage_dir'))
+    os.remove(file_path)
+    return redirect(url_for('manage_file', field_name=field_name))
 
 
 @app.route('/subject_analyze')
@@ -150,7 +163,15 @@ def subject_analyze():
 
 @app.route('/manage_search')
 def manage_search():
-    return render_template('search.html')
+    lines = []
+    try:
+        with open(PHRASES_PATH, 'r', encoding="utf-8")as f:
+            lines = f.readlines()
+            shuffle(lines)
+            lines = [line.strip() for line in lines[:300]]
+    except:
+        logger.error("读取PHRASES_PATH出错！")
+    return render_template('search.html', lines=lines)
 
 
 @app.route('/search', methods=['POST'])

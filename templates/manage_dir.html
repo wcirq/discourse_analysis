@@ -10,7 +10,7 @@
 {% for dir in dir_list %}
     -
     <a href="{{ url_for('manage_file', field_name=dir) }}">{{ dir }}</a><span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
-    <a href="{{ url_for('delete_file', filename=dir) }}">删除</a><br>
+    <a href="{{ url_for('delete_dir', field_name=dir) }}">删除</a><br>
 {% endfor %}
 <br>
 <br>

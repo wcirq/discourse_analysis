@@ -56,7 +56,7 @@ def test():
 
 def analyze_word(text):
     # 文本预处理
-    pattern = re.compile(u'\t|\n|\.|-|:|;|\)|\(|\?|《|》|\[|\]|"|,|，| |。|？|；|#')  # 定义正则表达式匹配模式
+    pattern = re.compile(u'―|、|\r|\t|\n|\.|-|:|;|\)|\(|\?|《|》|\[|\]|"|,|，| |。|？|；|#|“|”|％|…|．|【|】|：')  # 定义正则表达式匹配模式
     string_data = re.sub(pattern, '', text)  # 将符合模式的字符去除
 
     # 文本分词
@@ -67,9 +67,13 @@ def analyze_word(text):
     return dict(word_counts)
 
 
-def analyze_phrase(text, show=True):
+def analyze_phrase(texts, show=True):
+    # 文本预处理
+    pattern = re.compile(u'―|、|\r|\t|\n|\.|-|:|;|\)|\(|\?|《|》|\[|\]|"|,|，| |。|？|；|#|“|”|％|…|．|【|】|：')  # 定义正则表达式匹配模式
+    texts = [re.sub(pattern, '', text) for text in texts]  # 将符合模式的字符去除
+
     nw = NewWords(filter_cond=10, filter_free=2)
-    nw.add_text3(text, show)
+    nw.add_text3(texts, show)
     vocab = {k: v[0] for k, v in nw.vocab.items() if v[0] > 1}
     return vocab
 
