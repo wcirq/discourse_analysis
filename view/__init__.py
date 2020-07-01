@@ -6,7 +6,7 @@ import os
 from flask import Flask
 from flask_uploads import UploadSet, TEXT, configure_uploads, patch_request_class
 
-app = Flask(__name__, template_folder="../templates")
+app = Flask(__name__, template_folder="../templates", static_folder="../templates")
 app.config['SECRET_KEY'] = 'I have a dream'
 app.config['UPLOADED_PHOTOS_DEST'] = os.getcwd() + '/static'
 

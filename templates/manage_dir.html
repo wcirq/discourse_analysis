@@ -2,7 +2,8 @@
 <title>词频分析</title>
 <h1>词频分析</h1>
 <a href="{{ url_for('upload_file') }}">文件上传</a> /
-<a href="{{ url_for('manage_dir') }}">文件管理</a>
+<a href="{{ url_for('manage_dir') }}">文件管理</a>/
+<a href="{{ url_for('manage_search') }}">句子检索</a>
 <hr>
 
 {% for dir in dir_list %}
@@ -13,4 +14,5 @@
 <br>
 <br>
 <br>
-<a href="{{ url_for('subject_analyze') }}">领域词语/短语分析</a>
+<div style="color: crimson">主题词/主题短语检索，将分析以上两个领域，寻找对应的主题词和主题短语，使用对数似然率进行比较</div><br>
+<a href="{{ url_for('subject_analyze') }}">主题词语/短语分析</a>

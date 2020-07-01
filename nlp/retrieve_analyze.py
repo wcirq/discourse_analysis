@@ -13,17 +13,19 @@ import jieba
 from tqdm import tqdm
 
 from common.logger_config import logger
-from config import INDEX_ROOT_PATH, PHRASES_PATH
+from config import INDEX_ROOT_PATH, PHRASES_PATH, STATIC_PATH
 from nlp import correct
 from nlp.word_frequency import analyze_phrase
-
-root = "E:\\DATA\\领域数据"
 
 
 class DocumentSearch():
 
-    def __init__(self, root=root):
-        self.root = root
+    def __init__(self, reset_index=False):
+        self.version = 1  # 索引版本
+        self.reset_index = reset_index  # 索引版本
+        self.index_path = os.path.join(INDEX_ROOT_PATH, f"{self.version}.dict")
+        self.index_time = 0
+        self.root = STATIC_PATH
         self.index = {}  # 倒排索引
         self.participles = []  # 加入jieba用于分词的短语
         self.init_index()
@@ -100,43 +102,50 @@ class DocumentSearch():
             else:
                 self.index[word] = [dic_word_count[word]]
 
-    def init_index(self, version=2):
-        index_path = os.path.join(INDEX_ROOT_PATH, f"{version}.dict")
-        if os.path.exists(index_path):
-            with open(index_path, 'rb')as f:
-                self.index = pickle.load(f)
-            with open(PHRASES_PATH, 'r', encoding="utf-8")as f:
-                lines = f.readlines()
-                lines = [line.strip() for line in lines]
-                self.participles = lines
-            jieba.load_userdict(PHRASES_PATH)
-        else:
-            field_names = os.listdir(self.root)
-            for field_name in tqdm(field_names[:5], desc="field"):
-                field_path = os.path.join(self.root, field_name)
-                if os.path.isfile(field_path):
+    def read_index(self):
+        with open(self.index_path, 'rb')as f:
+            self.index = pickle.load(f)
+        with open(PHRASES_PATH, 'r', encoding="utf-8")as f:
+            lines = f.readlines()
+            lines = [line.strip() for line in lines]
+            self.participles = lines
+        self.index_time = os.path.getmtime(self.index_path)
+
+    def build_index(self):
+        field_names = os.listdir(self.root)
+        for field_name in tqdm(field_names[:5], desc="field"):
+            field_path = os.path.join(self.root, field_name)
+            if os.path.isfile(field_path):
+                continue
+            document_names = os.listdir(field_path)
+            for document_name in tqdm(document_names[:], desc="document"):
+                # if document_name != "C11-Space0004.txt" and document_name != "C11-Space1197.txt":
+                #     continue
+                document_path = os.path.join(field_path, document_name)
+                document_texts = self.read_file(document_path)
+                if document_texts is None:
                     continue
-                document_names = os.listdir(field_path)
-                for document_name in tqdm(document_names[:], desc="document"):
-                    # if document_name != "C11-Space0004.txt" and document_name != "C11-Space1197.txt":
-                    #     continue
-                    document_path = os.path.join(field_path, document_name)
-                    document_texts = self.read_file(document_path)
-                    if document_texts is None:
-                        continue
-                    sentences = self.cut_sentence(document_texts)
-                    words = self.cut_word(sentences)
-                    uniq_phrases, repeat_phrases = self.cut_phrase(sentences)
-                    # # 向jieba中加入短语
-                    # [jieba.add_word(phrase) for phrase in uniq_phrases]
-                    self.participles.extend(uniq_phrases)
-                    words.extend(repeat_phrases)
-                    self.create_inverted_index(words, field_name, document_name, sentences)
-            with open(index_path, 'wb') as fi, open(PHRASES_PATH, "w", encoding="utf-8") as fw:
-                pickle.dump(self.index, fi)
-                fw.write("\n".join(self.participles))
+                sentences = self.cut_sentence(document_texts)
+                words = self.cut_word(sentences)
+                uniq_phrases, repeat_phrases = self.cut_phrase(sentences)
+                # # 向jieba中加入短语
+                # [jieba.add_word(phrase) for phrase in uniq_phrases]
+                self.participles.extend(uniq_phrases)
+                words.extend(repeat_phrases)
+                self.create_inverted_index(words, field_name, document_name, sentences)
+        with open(self.index_path, 'wb') as fi, open(PHRASES_PATH, "w", encoding="utf-8") as fw:
+            pickle.dump(self.index, fi)
+            fw.write("\n".join(self.participles))
+        self.index_time = os.path.getmtime(self.index_path)
+
+    def init_index(self):
+        if self.reset_index or not os.path.exists(self.index_path):
+            self.build_index()
             # 向jieba中加入短语
             [jieba.add_word(phrase) for phrase in self.participles]
+        else:
+            self.read_index()
+            jieba.load_userdict(PHRASES_PATH)
 
     def auto_correct_sentence(self, query):
         """
@@ -148,6 +157,10 @@ class DocumentSearch():
         return co_query != query, co_query
 
     def search(self, query):
+        now_index_time = os.path.getmtime(self.index_path)
+        if now_index_time != self.index_time:
+            # 若索引文件被修改，则重新读取索引
+            self.read_index()
         words = jieba.lcut(query)
         words = set(words)
         results = {}
@@ -160,6 +173,7 @@ class DocumentSearch():
         result = {}
         for word, docs in datas.items():
             result[word] = []
+            # 默认只显示10个文档的结果
             for info in docs[:10]:
                 file_path = os.path.join(self.root, info[0], info[1])
                 document_texts = self.read_file(file_path)

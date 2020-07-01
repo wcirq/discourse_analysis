@@ -7,10 +7,11 @@ import re
 import shutil
 import time
 
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, jsonify
 from wtforms.validators import DataRequired, Length
-
+import threading
 from config import STATIC_PATH
+from nlp.retrieve_analyze import DocumentSearch
 from nlp.subject_analyze import read_corpus_file, analyze_word_likelihood, analyze_phrase_likelihood
 from nlp.util import read_txt
 from nlp.word_frequency import analyze_word, analyze_phrase
@@ -19,11 +20,13 @@ from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import SubmitField, StringField, SelectField
 from view import app, photos
 
+doc_search = DocumentSearch()
+
 
 class UploadForm(FlaskForm):
     photo = FileField(validators=[
         FileAllowed(photos, u'只能选择文本文件'), FileRequired(u'选择一个文件!')
-                                  ])
+    ])
     # field_name = StringField('name',
     #                    validators=[DataRequired(message=u"领域名不能为空"), Length(1, 10, message=u'长度位于1~10之间')],
     #                    render_kw={'placeholder': u'输入领域名'})
@@ -86,7 +89,8 @@ def mach_word(filename, word):
     path = os.path.join(app.config['UPLOADED_PHOTOS_DEST'], filename)
     lines = read_txt(path)
     results = [len(re.findall(word, line)) for line in lines]
-    return render_template('position.html', filename=filename, lines=lines, results=results, lenght=len(lines), word=word)
+    return render_template('position.html', filename=filename, lines=lines, results=results, lenght=len(lines),
+                           word=word)
 
 
 @app.route('/manage_file/<field_name>')
@@ -127,7 +131,7 @@ def delete_file(filename):
 @app.route('/subject_analyze')
 def subject_analyze():
     field1_path = os.path.join(STATIC_PATH, "领域一")
-    field2_path =  os.path.join(STATIC_PATH, "领域二")
+    field2_path = os.path.join(STATIC_PATH, "领域二")
     corpus1 = read_corpus_file(field1_path)
     corpus2 = read_corpus_file(field2_path)
     word_likelihood_sort = analyze_word_likelihood(corpus1, corpus2)
@@ -142,3 +146,31 @@ def subject_analyze():
               f"{p2[0]} - {round(-p2[1], 2)}"]
              for w1, p1, w2, p2 in zip(field1_word, field1_phrase, field2_word, field2_phrase)]
     return render_template('subject_analyze.html', datas=datas)
+
+
+@app.route('/manage_search')
+def manage_search():
+    return render_template('search.html')
+
+
+@app.route('/search', methods=['POST'])
+def search():
+    global doc_search
+    try:
+        texts = request.values["texts"]
+        reslut = doc_search.search(texts)
+        reslut = doc_search.get_sentence(reslut)
+        return jsonify(code=1, msg=f"ok", data=reslut)
+    except Exception as e:
+        return jsonify(code=0, msg=f"no")
+
+
+@app.route('/reset_index', methods=['POST'])
+def reset_index():
+    global doc_search
+    t_name = [t.name for t in threading.enumerate() if t.name == "reset_index"]
+    if len(t_name) > 0:
+        return jsonify(code=0, msg="no")
+    else:
+        threading.Thread(target=DocumentSearch, args=(True,), name="reset_index").start()
+        return jsonify(code=1, msg=f"ok")
