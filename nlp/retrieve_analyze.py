@@ -15,6 +15,7 @@ from tqdm import tqdm
 from common.logger_config import logger
 from config import INDEX_ROOT_PATH, PHRASES_PATH, STATIC_PATH
 from nlp import correct
+from nlp.util import pretreatment_texts
 from nlp.word_frequency import analyze_phrase
 
 
@@ -177,6 +178,7 @@ class DocumentSearch():
             for info in docs[:10]:
                 file_path = os.path.join(self.root, info[0], info[1])
                 document_texts = self.read_file(file_path)
+                document_texts = pretreatment_texts(document_texts)
                 if document_texts is None:
                     continue
                 sentences = self.cut_sentence(document_texts)

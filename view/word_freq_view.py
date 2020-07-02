@@ -16,7 +16,7 @@ from common.logger_config import logger
 from config import STATIC_PATH, PHRASES_PATH
 from nlp.retrieve_analyze import DocumentSearch
 from nlp.subject_analyze import read_corpus_file, analyze_word_likelihood, analyze_phrase_likelihood
-from nlp.util import read_txt
+from nlp.util import read_txt, pretreatment_texts
 from nlp.word_frequency import analyze_word, analyze_phrase
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileRequired
@@ -94,6 +94,7 @@ def phrase_counts(field_name, filename):
 def match_word(field_name, filename, word):
     path = os.path.join(app.config['UPLOADED_PHOTOS_DEST'], field_name, filename)
     lines = read_txt(path)
+    lines = pretreatment_texts(lines)
     results = [len(re.findall(word, line)) for line in lines]
     return render_template('position.html', filename=filename, lines=lines, results=results, lenght=len(lines),
                            word=word)

@@ -10,6 +10,7 @@ from PIL import Image  # 图像处理库
 import matplotlib.pyplot as plt  # 图像展示库
 
 from nlp.new_words import NewWords
+from nlp.util import pretreatment_texts
 
 
 def test():
@@ -54,10 +55,11 @@ def test():
     plt.show()  # 显示图像
 
 
-def analyze_word(text):
+def analyze_word(texts):
     # 文本预处理
-    pattern = re.compile(u'―|、|\r|\t|\n|\.|-|:|;|\)|\(|\?|《|》|\[|\]|"|,|，| |。|？|；|#|“|”|％|…|．|【|】|：')  # 定义正则表达式匹配模式
-    string_data = re.sub(pattern, '', text)  # 将符合模式的字符去除
+    # pattern = re.compile(u'―|、|\r|\t|\n|\.|-|:|;|\)|\(|\?|《|》|\[|\]|"|,|，| |。|？|；|#|“|”|％|…|．|【|】|：')  # 定义正则表达式匹配模式
+    # string_data = re.sub(pattern, '', text)  # 将符合模式的字符去除
+    string_data = pretreatment_texts(texts)
 
     # 文本分词
     seg_list_exact = jieba.cut(string_data, cut_all=False)  # 精确模式分词
@@ -69,12 +71,14 @@ def analyze_word(text):
 
 def analyze_phrase(texts, show=True):
     # 文本预处理
-    pattern = re.compile(u'―|、|\r|\t|\n|\.|-|:|;|\)|\(|\?|《|》|\[|\]|"|,|，| |。|？|；|#|“|”|％|…|．|【|】|：')  # 定义正则表达式匹配模式
-    texts = [re.sub(pattern, '', text) for text in texts]  # 将符合模式的字符去除
-
+    # pattern = re.compile(u'―|、|\r|\t|\n|\.|-|:|;|\)|\(|\?|《|》|\[|\]|"|,|，| |。|？|；|#|“|”|％|…|．|【|】|：')  # 定义正则表达式匹配模式
+    # texts = [re.sub(pattern, '', text) for text in texts]  # 将符合模式的字符去除
+    texts = pretreatment_texts(texts)
     nw = NewWords(filter_cond=10, filter_free=2)
     nw.add_text3(texts, show)
     vocab = {k: v[0] for k, v in nw.vocab.items() if v[0] > 1}
+    if len(vocab.keys())<1:
+        vocab = {k: v[0] for k, v in nw.vocab.items()}
     return vocab
 
 

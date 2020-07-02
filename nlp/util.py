@@ -36,3 +36,12 @@ def log_likelihood(l1, l2):
         l2 = 1e-9
     result = np.log(l1 / l2)
     return result
+
+
+def pretreatment_texts(texts):
+    pattern = re.compile(u'―|、|\r|\t|\n|\.|-|:|;|\)|\(|\?|《|》|\[|\]|"|,|，| |。|？|；|#|“|”|％|…|．|【|】|：')  # 定义正则表达式匹配模式
+    if isinstance(texts, list):
+        texts = [re.sub(pattern, '', text) for text in texts]  # 将符合模式的字符去除
+    else:
+        texts = re.sub(pattern, '', texts)  # 将符合模式的字符去除
+    return texts
