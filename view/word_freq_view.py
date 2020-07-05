@@ -14,6 +14,7 @@ import threading
 
 from common.logger_config import logger
 from config import STATIC_PATH, PHRASES_PATH
+from nlp.match_analysis import MatchAnalysis
 from nlp.retrieve_analyze import DocumentSearch
 from nlp.subject_analyze import read_corpus_file, analyze_word_likelihood, analyze_phrase_likelihood
 from nlp.util import read_txt, pretreatment_texts
@@ -21,9 +22,7 @@ from nlp.word_frequency import analyze_word, analyze_phrase
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import SubmitField, StringField, SelectField
-from view import app, photos
-
-doc_search = DocumentSearch()
+from view import app, photos, match_analy, doc_search
 
 
 class UploadForm(FlaskForm):
@@ -177,7 +176,6 @@ def manage_search():
 
 @app.route('/search', methods=['POST'])
 def search():
-    global doc_search
     try:
         texts = request.values["texts"]
         reslut = doc_search.search(texts)
@@ -189,10 +187,21 @@ def search():
 
 @app.route('/reset_index', methods=['POST'])
 def reset_index():
-    global doc_search
     t_name = [t.name for t in threading.enumerate() if t.name == "reset_index"]
     if len(t_name) > 0:
         return jsonify(code=0, msg="no")
     else:
         threading.Thread(target=DocumentSearch, args=(True,), name="reset_index").start()
         return jsonify(code=1, msg=f"ok")
+
+
+@app.route('/match_analysis', methods=['POST'])
+def match_analysis():
+    values = request.values
+    word = values.get("word", "")
+    try:
+        result = match_analy.match(word, document_search=doc_search)
+        return jsonify(code=1, msg=f"ok", data=result)
+    except Exception as e:
+        logger.error(f"{e}")
+        return jsonify(code=0, msg="no")

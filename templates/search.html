@@ -18,8 +18,9 @@
 </form>
 
 <div>
+    <div id="word_show" style="width: 50%;margin-top: 20px;border: #b8dcff solid;float: left;color: crimson;">点击下方文字，显示搭配分析</div>
     <div id="json_show" style="width: 50%;margin-top: 20px;border: #b8dcff solid;float: left;">结果显示在这里</div>
-    <div id="json_show" style="width: 40%;margin-top: 20px;border: #b8dcff solid;float: right;">
+    <div id="phrase_show" style="width: 40%;margin-top: 20px;border: #b8dcff solid;float: right;">
         <div style="color: crimson">一些短语</div>
         {% for line in lines %}
             <div>{{ line }}</div>
@@ -28,12 +29,55 @@
 </div>
 
 <script>
-    var show = function(json){
+    var show_json = function(json){
         var args = {
             collapsed: true //是否折叠
         };
         $('#json_show').JSONView(json, args);
     };
+
+    function get_word_freq(word, elem) {
+        $.ajax({
+            url:"/match_analysis",
+            type:'POST',
+            dataType:"json",
+            data: {"word":word},  // 这个序列化传递很重要
+            success:function (resp) {
+                // window.location.href = "/admin/page";
+                if(resp.code==1){
+                    datas = resp.data;
+                    console.log(datas);
+                    $("."+word).remove();
+                    for(var i = 0; i < datas.length; i++){
+                        var w = datas[i][0];
+                        var count = datas[i][1];
+                        elem.after("<div class='"+word+"' style='color: cornflowerblue'>&nbsp;&nbsp;&nbsp;&nbsp;"+w+" : "+count+"</div>")
+                    }
+                }
+            }
+        })
+    }
+
+    function set_buttom(json) {
+        for (var key in json){
+            var args = JSON.stringify(json[key]);
+            var text = "<div class='onclick' style='cursor:pointer;color: black'>"+key+"</div>";
+            console.log(text);
+            $("#word_show").append(text);
+            $("#word_show").append("<div style='display:none;'>"+JSON.stringify(json[key])+"</div>");
+        }
+        $('.onclick').click(function(event) {
+            var elem =  $(this);
+            var vaule = $(this).next().text();
+            var word = $(this).text();
+            if ($("."+word).length>0) {
+                $("." + word).remove();
+            }else {
+                get_word_freq(word, elem);
+            }
+        });
+    };
+
 
     $("#demo_form").submit(function(e){
         e.preventDefault();
@@ -45,10 +89,12 @@
             data: $(this).serialize(),  // 这个序列化传递很重要
             success:function (resp) {
                 // window.location.href = "/admin/page";
+                $("#word_show").children().remove();
                 if(resp.code==1){
                     console.log(resp.data);
                     {#alert(JSON.stringify(resp.data));#}
-                    show(resp.data)
+                    set_buttom(resp.data);
+                    show_json(resp.data)
                 }
             }
         })

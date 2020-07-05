@@ -170,12 +170,18 @@ class DocumentSearch():
                 results[word] = self.index[word]
         return results
 
-    def get_sentence(self, datas):
+    def get_sentence(self, datas, num=10):
+        """
+        获取词
+        :param datas:
+        :param num: 显示的文档结果个数，默认为10， 传入None则是所有
+        :return: 
+        """
         result = {}
         for word, docs in datas.items():
             result[word] = []
             # 默认只显示10个文档的结果
-            for info in docs[:10]:
+            for info in docs[:num]:
                 file_path = os.path.join(self.root, info[0], info[1])
                 document_texts = self.read_file(file_path)
                 document_texts = pretreatment_texts(document_texts)
