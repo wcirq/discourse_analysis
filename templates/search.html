@@ -37,11 +37,12 @@
     };
 
     function get_word_freq(word, elem) {
+        var sentences = elem.next().text();
         $.ajax({
             url:"/match_analysis",
             type:'POST',
             dataType:"json",
-            data: {"word":word},  // 这个序列化传递很重要
+            data: {"word":word, "sentences":sentences},  // 这个序列化传递很重要
             success:function (resp) {
                 // window.location.href = "/admin/page";
                 if(resp.code==1){

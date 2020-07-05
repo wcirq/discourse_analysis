@@ -2,6 +2,7 @@
 # @Time 2020/6/28 15:09
 # @Author wcy
 import hashlib
+import json
 import os
 import re
 import shutil
@@ -199,8 +200,11 @@ def reset_index():
 def match_analysis():
     values = request.values
     word = values.get("word", "")
+    sentences = values.get("sentences", [])
+    if isinstance(sentences, str):
+        sentences = json.loads(sentences)
     try:
-        result = match_analy.match(word, document_search=doc_search)
+        result = match_analy.match(word, sentences=sentences, document_search=doc_search)
         return jsonify(code=1, msg=f"ok", data=result)
     except Exception as e:
         logger.error(f"{e}")

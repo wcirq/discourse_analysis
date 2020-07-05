@@ -21,7 +21,9 @@ class MatchAnalysis(object):
         for sentence in sentences:
             sentence_list = sentence[3:]
             for s in sentence_list:
+                jieba.add_word(word)
                 s_cut = jieba.lcut(s)
+                jieba.del_word(word)
                 if not word in s_cut:
                     continue
                 index = s_cut.index(word)
@@ -31,7 +33,7 @@ class MatchAnalysis(object):
                 words.remove(word)
                 all_words.extend(words)
         dic_word_count = Counter(all_words)
-        dic_word_count_sort = sorted(dic_word_count.items(), key=lambda d: d[1], reverse=True)
+        dic_word_count_sort = sorted(dic_word_count.items(), key=lambda d: d[1], reverse=False)
         return dic_word_count_sort
 
     def match(self, word, num=5, sentences=None, document_search=None):
