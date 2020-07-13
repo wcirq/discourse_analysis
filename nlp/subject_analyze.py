@@ -3,6 +3,8 @@
 # @Author wcy
 import os
 import re
+
+import chardet
 import numpy as np
 import jieba
 import collections
@@ -87,12 +89,16 @@ def read_corpus_file(corpus_path, max_num=500):
     file_list = os.listdir(corpus_path)
     results = []
     for file_name in file_list[:]:
-        path = os.path.join(corpus_path, file_name)
-        with open(path, "r", encoding="gbk") as f:
+        document_path = os.path.join(corpus_path, file_name)
+        bytes = min(2048, os.path.getsize(document_path))
+        raw = open(document_path, 'rb').read(bytes)
+        result = chardet.detect(raw)
+        encoding = result['encoding']
+        with open(document_path, "r", encoding=encoding) as f:
             try:
                 result = f.readlines()
             except Exception as e:
-                print(path)
+                print(document_path)
                 continue
             result = [line.strip('\n') for line in result]
             result = "".join(result)
