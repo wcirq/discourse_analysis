@@ -15,9 +15,11 @@ from tqdm import tqdm
 from common.logger_config import logger
 from config import INDEX_ROOT_PATH, PHRASES_PATH, STATIC_PATH
 from nlp import correct
-from nlp.util import pretreatment_texts
+from nlp.util import pretreatment_texts, get_chinese_ratio
 from nlp.word_frequency import analyze_phrase
+
 tokenizer = jieba.Tokenizer(dictionary=jieba.DEFAULT_DICT)
+
 
 class DocumentSearch():
 
@@ -66,9 +68,15 @@ class DocumentSearch():
     def cut_word(self, sentences):
         words = []
         if isinstance(sentences, list):
-            [words.extend(jieba.Tokenizer.lcut(tokenizer, sentence, cut_all=False)) for sentence in sentences]
+            if get_chinese_ratio(sentences) > 0.5:
+                [words.extend(jieba.Tokenizer.lcut(tokenizer, sentence, cut_all=False)) for sentence in sentences]
+            else:
+                [words.extend(re.split(" ", sentence)) for sentence in sentences]
         else:
-            words = jieba.Tokenizer.lcut(tokenizer, sentences, cut_all=False)
+            if get_chinese_ratio(sentences) > 0.5:
+                words = jieba.Tokenizer.lcut(tokenizer, sentences, cut_all=False)
+            else:
+                words = re.split(" ", sentences)
         pattern = "[ |&|　|、]"
         words = [re.sub(pattern, "", word) for word in words if re.sub(pattern, "", word) != ""]
         return words
@@ -114,7 +122,6 @@ class DocumentSearch():
             lines = f.readlines()
             lines = [line.strip() for line in lines]
             self.participles = lines
-
 
     def build_index(self):
         field_names = os.listdir(self.root)
@@ -167,7 +174,10 @@ class DocumentSearch():
         if now_index_time != self.index_time:
             # 若索引文件被修改，则重新读取索引
             self.read_index()
-        words = jieba.Tokenizer.lcut(tokenizer, query)
+        if get_chinese_ratio(query)>0.5:
+            words = jieba.Tokenizer.lcut(tokenizer, query)
+        else:
+            words = re.split(" ", query)
         words = set(words)
         results = {}
         for word in words:

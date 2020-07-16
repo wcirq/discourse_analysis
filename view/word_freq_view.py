@@ -73,7 +73,7 @@ def word_counts(field_name, filename):
     file_path = os.path.join(field_name, filename)
     path = os.path.join(app.config['UPLOADED_PHOTOS_DEST'], file_path)
     datas = read_txt(path)
-    datas = "".join(datas)
+    datas = " ".join(datas)
     word_counts = analyze_word(datas)
     word_counts = {k:v for k, v in word_counts.items() if len(k)>1}
     word_counts = sorted(word_counts.items(), key=lambda d: d[1], reverse=True)

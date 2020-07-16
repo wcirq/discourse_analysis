@@ -10,7 +10,7 @@ from PIL import Image  # 图像处理库
 import matplotlib.pyplot as plt  # 图像展示库
 
 from nlp.new_words import NewWords
-from nlp.util import pretreatment_texts
+from nlp.util import pretreatment_texts, get_chinese_ratio
 
 
 def test():
@@ -62,7 +62,10 @@ def analyze_word(texts):
     string_data = pretreatment_texts(texts)
 
     # 文本分词
-    seg_list_exact = jieba.cut(string_data, cut_all=False)  # 精确模式分词
+    if get_chinese_ratio(string_data) > 0.5:
+        seg_list_exact = jieba.lcut(string_data, cut_all=False)  # 精确模式分词
+    else:
+        seg_list_exact = re.split(" ", string_data)
 
     # 词频统计
     word_counts = collections.Counter(seg_list_exact)  # 对分词做词频统计
@@ -77,7 +80,7 @@ def analyze_phrase(texts, show=True):
     nw = NewWords(filter_cond=10, filter_free=2)
     nw.add_text3(texts, show)
     vocab = {k: v[0] for k, v in nw.vocab.items() if v[0] > 1}
-    if len(vocab.keys())<1:
+    if len(vocab.keys()) < 1:
         vocab = {k: v[0] for k, v in nw.vocab.items()}
     return vocab
 

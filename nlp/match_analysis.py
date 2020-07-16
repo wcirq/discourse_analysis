@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*- 
 # @Time 2020/7/5 21:21
 # @Author wcy
+import re
 from collections import Counter
 from pprint import pprint
 
 import jieba
 
 from nlp.retrieve_analyze import DocumentSearch
+from nlp.util import get_chinese_ratio
 
 
 class MatchAnalysis(object):
@@ -17,13 +19,17 @@ class MatchAnalysis(object):
         self.document_search = document_search
 
     def analysis(self, sentences, word, num):
+        is_chinese = get_chinese_ratio(word)>0.5
         all_words = []
         for sentence in sentences:
             sentence_list = sentence[3:]
             for s in sentence_list:
-                jieba.add_word(word)
-                s_cut = jieba.lcut(s)
-                jieba.del_word(word)
+                if is_chinese:
+                    jieba.add_word(word)
+                    s_cut = jieba.lcut(s)
+                    jieba.del_word(word)
+                else:
+                    s_cut = re.split(" ", s)
                 if not word in s_cut:
                     continue
                 index = s_cut.index(word)

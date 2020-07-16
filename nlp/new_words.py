@@ -6,6 +6,8 @@ import re
 import math
 import os
 
+from nlp.util import get_chinese_ratio
+
 
 class NewWords:
     def __init__(self, max_split=5, accuracy=0.1, filter_cond=None, filter_free=None):
@@ -73,14 +75,21 @@ class NewWords:
             console = tqdm
         for word in console(datas, desc='读取数据进度条'):
             words = word.strip()
-            for lines in re.split('[^\u4e00-\u9fa50-9a-zA-Z]', words):  # 非 中文编码的开始和结束的两个值+字母+数字 进行切分
-                match = list(jieba.cut(lines))
+            if len(words) == 0:
+                continue
+            is_chinese = get_chinese_ratio(words) > 0.5  # 是否是中文
+            pattern = '[^\u4e00-\u9fa50-9a-zA-Z]' if is_chinese else '[^\u4e00-\u9fa50-9a-zA-Zа-яА-Я ]'
+            for lines in re.split(pattern, words):  # 非 中文编码的开始和结束的两个值+字母+数字+俄语 进行切分
+                if is_chinese:
+                    match = list(jieba.cut(lines))
+                else:
+                    match = re.split(" ", lines)
                 lens = len(match)
                 self.all_words_len += lens
                 for i in range(lens):
                     for j in range(1, self.max_split + 1):
                         if i + j <= lens:
-                            k = ''.join(match[i:i + j])
+                            k = ''.join(match[i:i + j]) if is_chinese else ' '.join(match[i:i + j])
                             if len(match[i:i + j]) < 2:
                                 continue
                             if k in self.vocab:
