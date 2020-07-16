@@ -186,25 +186,45 @@ def search():
         return jsonify(code=0, msg=f"no")
 
 
-@app.route('/reset_index', methods=['POST'])
-def reset_index():
+@app.route('/reset_index/<intention>', methods=['POST'])
+def reset_index(intention):
+    """
+
+    :param intention: [submit, confirm] [提交任务建立索引， 确认是否存在任务]
+    :return:
+    """
     t_name = [t.name for t in threading.enumerate() if t.name == "reset_index"]
-    if len(t_name) > 0:
-        return jsonify(code=0, msg="no")
+    if intention=="confirm":
+        if len(t_name) > 0:
+            # 返回no 表示有任务在进行
+            return jsonify(code=0, msg="no")
+        else:
+            # 返回ok 表示没有任务在进行
+            return jsonify(code=1, msg=f"ok")
+    elif intention=="submit":
+        if len(t_name) > 0:
+            # 返回 no 表示有任务在进行
+            return jsonify(code=0, msg="no")
+        else:
+            # 返回ok 表示启动一个任务
+            threading.Thread(target=DocumentSearch, args=(True,), name="reset_index").start()
+            return jsonify(code=1, msg=f"ok")
     else:
-        threading.Thread(target=DocumentSearch, args=(True,), name="reset_index").start()
-        return jsonify(code=1, msg=f"ok")
+        return jsonify(code=2, msg=f"unknow")
 
 
 @app.route('/match_analysis', methods=['POST'])
 def match_analysis():
     values = request.values
     word = values.get("word", "")
+    num = values.get("num", 5)
+    if isinstance(num, str):
+        num = int(num)
     sentences = values.get("sentences", [])
     if isinstance(sentences, str):
         sentences = json.loads(sentences)
     try:
-        result = match_analy.match(word, sentences=sentences, document_search=doc_search)
+        result = match_analy.match(word, sentences=sentences, document_search=doc_search, num=num)
         return jsonify(code=1, msg=f"ok", data=result)
     except Exception as e:
         logger.error(f"{e}")

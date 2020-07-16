@@ -39,7 +39,7 @@ def log_likelihood(l1, l2):
 
 
 def pretreatment_texts(texts):
-    pattern = re.compile(u'―|、|\r|\t|\n|\.|-|:|;|\)|\(|\?|《|》|\[|\]|"|,|，| |。|？|；|#|“|”|％|…|．|【|】|：')  # 定义正则表达式匹配模式
+    pattern = re.compile(u'―|\r|\t|\n|\.|-|:|;|\)|\(|\?|《|》|\[|\]|"|,|，| |。|？|；|#|“|”|％|…|．|【|】|：')  # 定义正则表达式匹配模式
     if isinstance(texts, list):
         texts = [re.sub(pattern, '', text) for text in texts]  # 将符合模式的字符去除
     else:

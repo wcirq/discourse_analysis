@@ -36,13 +36,13 @@
         $('#json_show').JSONView(json, args);
     };
 
-    function get_word_freq(word, elem) {
+    function get_word_freq(word, num, elem) {
         var sentences = elem.next().text();
         $.ajax({
             url:"/match_analysis",
             type:'POST',
             dataType:"json",
-            data: {"word":word, "sentences":sentences},  // 这个序列化传递很重要
+            data: {"word":word, "sentences":sentences, "num":num},  // 这个序列化传递很重要
             success:function (resp) {
                 // window.location.href = "/admin/page";
                 if(resp.code==1){
@@ -57,6 +57,15 @@
                 }
             }
         })
+    }
+
+    function isNumber(val) {
+        var regPos = /^\d+$/; //非负浮点数
+        if(regPos.test(val)) {
+                return true;
+            } else {
+                return false;
+            }
     }
 
     function set_buttom(json) {
@@ -74,7 +83,12 @@
             if ($("."+word).length>0) {
                 $("." + word).remove();
             }else {
-                get_word_freq(word, elem);
+                var num=prompt("分析前后几个词", 5);
+                if (!isNumber(num)) {
+                    alert("请输入正整数！")
+                }else {
+                    get_word_freq(word, num, elem);
+                }
             }
         });
     };
@@ -101,21 +115,51 @@
         })
     });
 
-    $("#reset_index").click(function(e){
-        e.preventDefault();
-
+    function submit_task(){
         $.ajax({
-            url:"/reset_index",
+            url:"/reset_index/submit",
             type:'POST',
             dataType:"json",
             success:function (resp) {
                 // window.location.href = "/admin/page";
                 if(resp.code==1){
-                    console.log(resp.data);
+                    console.log(resp.msg);
                     alert("成功！后台正在处理！处理时间随数据量增加而增加。");
-                }else {
-                    console.log(resp.data);
+                }else if (resp.code==0){
+                    console.log(resp.msg);
                     alert("失败！上一个任务正在处理,请稍后再试！");
+                }else {
+                    console.log(resp.msg);
+                    alert("url错误");
+                }
+            }
+        })
+    }
+
+    $("#reset_index").click(function(e){
+        e.preventDefault();
+
+        $.ajax({
+            url:"/reset_index/confirm",
+            type:'POST',
+            dataType:"json",
+            success:function (resp) {
+                // window.location.href = "/admin/page";
+                if(resp.code==1){
+                    console.log(resp.msg);
+                    var r=confirm("后台没有任务在进行，是否重新构建倒排索引？");
+                    if (r==true){
+                        submit_task()
+                    } else{
+                        console.log("你按下了\"取消\"按钮!");
+                    }
+
+                }else if (resp.code==0){
+                    console.log(resp.msg);
+                    alert("失败！上一个任务正在处理,请稍后再试！");
+                }else {
+                    console.log(resp.msg);
+                    alert("url错误");
                 }
             }
         })

@@ -17,13 +17,13 @@ from config import INDEX_ROOT_PATH, PHRASES_PATH, STATIC_PATH
 from nlp import correct
 from nlp.util import pretreatment_texts
 from nlp.word_frequency import analyze_phrase
-
+tokenizer = jieba.Tokenizer(dictionary=jieba.DEFAULT_DICT)
 
 class DocumentSearch():
 
     def __init__(self, reset_index=False):
         self.version = 1  # 索引版本
-        self.reset_index = reset_index  # 索引版本
+        self.reset_index = reset_index  # 是否重置索引
         self.index_path = os.path.join(INDEX_ROOT_PATH, f"{self.version}.dict")
         self.index_time = 0
         self.root = STATIC_PATH
@@ -66,9 +66,9 @@ class DocumentSearch():
     def cut_word(self, sentences):
         words = []
         if isinstance(sentences, list):
-            [words.extend(jieba.cut(sentence, cut_all=False)) for sentence in sentences]
+            [words.extend(jieba.Tokenizer.lcut(tokenizer, sentence, cut_all=False)) for sentence in sentences]
         else:
-            words = jieba.lcut(sentences, cut_all=False)
+            words = jieba.Tokenizer.lcut(tokenizer, sentences, cut_all=False)
         pattern = "[ |&|　|、]"
         words = [re.sub(pattern, "", word) for word in words if re.sub(pattern, "", word) != ""]
         return words
@@ -106,11 +106,15 @@ class DocumentSearch():
     def read_index(self):
         with open(self.index_path, 'rb')as f:
             self.index = pickle.load(f)
+        self.index_time = os.path.getmtime(self.index_path)
+        if not os.path.exists(PHRASES_PATH):
+            self.participles = []
+            return
         with open(PHRASES_PATH, 'r', encoding="utf-8")as f:
             lines = f.readlines()
             lines = [line.strip() for line in lines]
             self.participles = lines
-        self.index_time = os.path.getmtime(self.index_path)
+
 
     def build_index(self):
         field_names = os.listdir(self.root)
@@ -143,10 +147,11 @@ class DocumentSearch():
         if self.reset_index or not os.path.exists(self.index_path):
             self.build_index()
             # 向jieba中加入短语
-            [jieba.add_word(phrase) for phrase in self.participles]
+            [jieba.Tokenizer.add_word(tokenizer, phrase) for phrase in self.participles]
         else:
             self.read_index()
-            jieba.load_userdict(PHRASES_PATH)
+            if os.path.exists(PHRASES_PATH):
+                jieba.Tokenizer.load_userdict(tokenizer, PHRASES_PATH)
 
     def auto_correct_sentence(self, query):
         """
@@ -162,7 +167,7 @@ class DocumentSearch():
         if now_index_time != self.index_time:
             # 若索引文件被修改，则重新读取索引
             self.read_index()
-        words = jieba.lcut(query)
+        words = jieba.Tokenizer.lcut(tokenizer, query)
         words = set(words)
         results = {}
         for word in words:

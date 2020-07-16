@@ -2,12 +2,8 @@
 # @Time 2020/6/28 15:41
 # @Author wcy
 import os
-import re
 
 import chardet
-import numpy as np
-import jieba
-import collections
 
 from nlp.util import log_likelihood
 from nlp.word_frequency import analyze_word, analyze_phrase

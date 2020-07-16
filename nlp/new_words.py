@@ -81,7 +81,7 @@ class NewWords:
                     for j in range(1, self.max_split + 1):
                         if i + j <= lens:
                             k = ''.join(match[i:i + j])
-                            if len(match[i:i + j]) < 3:
+                            if len(match[i:i + j]) < 2:
                                 continue
                             if k in self.vocab:
                                 w = self.vocab[k]
