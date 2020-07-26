@@ -224,7 +224,8 @@ def match_analysis():
     if isinstance(sentences, str):
         sentences = json.loads(sentences)
     try:
-        result = match_analy.match(word, sentences=sentences, document_search=doc_search, num=num)
+        pattern = doc_search.pattern
+        result = match_analy.match(word, sentences=sentences, document_search=doc_search, num=num, pattern=pattern)
         return jsonify(code=1, msg=f"ok", data=result)
     except Exception as e:
         logger.error(f"{e}")

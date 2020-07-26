@@ -6,6 +6,7 @@ import pickle
 import re
 from _tkinter import _flatten
 from collections import Counter
+from copy import deepcopy
 from pprint import pprint
 
 import chardet
@@ -111,17 +112,22 @@ class DocumentSearch():
             else:
                 self.index[word] = [dic_word_count[word]]
 
+    def compile_pattern(self):
+        self.pattern = re.compile("\(" + '|'.join(self.participles) + "\)")
+
     def read_index(self):
         with open(self.index_path, 'rb')as f:
             self.index = pickle.load(f)
         self.index_time = os.path.getmtime(self.index_path)
         if not os.path.exists(PHRASES_PATH):
             self.participles = []
+            self.compile_pattern()
             return
         with open(PHRASES_PATH, 'r', encoding="utf-8")as f:
             lines = f.readlines()
             lines = [line.strip() for line in lines]
             self.participles = lines
+            self.compile_pattern()
 
     def build_index(self):
         field_names = os.listdir(self.root)
@@ -148,6 +154,7 @@ class DocumentSearch():
         with open(self.index_path, 'wb') as fi, open(PHRASES_PATH, "w", encoding="utf-8") as fw:
             pickle.dump(self.index, fi)
             fw.write("\n".join(self.participles))
+            self.compile_pattern()
         self.index_time = os.path.getmtime(self.index_path)
 
     def init_index(self):
@@ -174,10 +181,19 @@ class DocumentSearch():
         if now_index_time != self.index_time:
             # 若索引文件被修改，则重新读取索引
             self.read_index()
-        if get_chinese_ratio(query)>0.5:
+        if get_chinese_ratio(query) > 0.5:
             words = jieba.Tokenizer.lcut(tokenizer, query)
         else:
-            words = re.split(" ", query)
+            texts = deepcopy(query)
+            words = []
+            phrase_iterator = self.pattern.finditer(query)
+            for phrase in phrase_iterator:
+                word = phrase.group()
+                words.append(word)
+                texts = re.sub(word, "", texts)
+            words2 = texts.split(" ")
+            words2 = [word for word in words2 if word.strip() != ""]
+            words.extend(words2)
         words = set(words)
         results = {}
         for word in words:

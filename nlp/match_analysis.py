@@ -3,6 +3,7 @@
 # @Author wcy
 import re
 from collections import Counter
+from copy import deepcopy
 from pprint import pprint
 
 import jieba
@@ -18,7 +19,9 @@ class MatchAnalysis(object):
             document_search = DocumentSearch()
         self.document_search = document_search
 
-    def analysis(self, sentences, word, num):
+    def analysis(self, sentences, word, num, pattern=None):
+        if pattern is None:
+            pattern = re.compile("\(" + '|'.join([]) + "\)")
         is_chinese = get_chinese_ratio(word)>0.5
         all_words = []
         for sentence in sentences:
@@ -29,7 +32,17 @@ class MatchAnalysis(object):
                     s_cut = jieba.lcut(s)
                     jieba.del_word(word)
                 else:
-                    s_cut = re.split(" ", s)
+                    texts = deepcopy(s)
+                    words = []
+                    phrase_iterator = pattern.finditer(s)
+                    for phrase in phrase_iterator:
+                        word = phrase.group()
+                        words.append(word)
+                        texts = re.sub(word, "", texts)
+                    words2 = texts.split(" ")
+                    words2 = [word for word in words2 if word.strip() != ""]
+                    words.extend(words2)
+                    s_cut = words
                 if not word in s_cut:
                     continue
                 index = s_cut.index(word)
@@ -42,7 +55,7 @@ class MatchAnalysis(object):
         dic_word_count_sort = sorted(dic_word_count.items(), key=lambda d: d[1], reverse=False)
         return dic_word_count_sort
 
-    def match(self, word, num=5, sentences=None, document_search=None):
+    def match(self, word, num=5, sentences=None, document_search=None, pattern=None):
         """
         word搭配的词
         :param word:
@@ -50,6 +63,8 @@ class MatchAnalysis(object):
         :param sentences:
         :return:
         """
+        if pattern is None:
+            pattern = re.compile("\(" + '|'.join([]) + "\)")
         if document_search is None:
             document_search = self.document_search
         if sentences is None:
@@ -57,7 +72,7 @@ class MatchAnalysis(object):
             sentences_index = document_search.search(word)
             sentences = document_search.get_sentence(sentences_index)
             sentences = sentences.get(word, [])
-        result = self.analysis(sentences, word, num)
+        result = self.analysis(sentences, word, num, pattern)
         return result
 
 
