@@ -149,7 +149,7 @@
                 // window.location.href = "/admin/page";
                 if(resp.code==1){
                     console.log(resp.msg);
-                    var r=confirm("后台没有任务在进行，是否重新构建倒排索引？");
+                    var r=confirm("上传构建任务已完成，是否重新构建倒排索引？");
                     if (r==true){
                         submit_task()
                     } else{
