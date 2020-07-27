@@ -76,6 +76,7 @@ def analyze_phrase(texts, show=True):
     # 文本预处理
     # pattern = re.compile(u'―|、|\r|\t|\n|\.|-|:|;|\)|\(|\?|《|》|\[|\]|"|,|，| |。|？|；|#|“|”|％|…|．|【|】|：')  # 定义正则表达式匹配模式
     # texts = [re.sub(pattern, '', text) for text in texts]  # 将符合模式的字符去除
+    # score = get_chinese_ratio(texts)
     texts = pretreatment_texts(texts)
     nw = NewWords(filter_cond=10, filter_free=2)
     nw.add_text3(texts, show)

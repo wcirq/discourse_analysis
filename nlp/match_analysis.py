@@ -21,28 +21,34 @@ class MatchAnalysis(object):
 
     def analysis(self, sentences, word, num, pattern=None):
         if pattern is None:
-            pattern = re.compile("\(" + '|'.join([]) + "\)")
+            pattern = re.compile("\(" + '|'.join([word]) + "\)")
+        else:
+            pattern = re.compile(f"{pattern.pattern[:1]}{word}|{pattern.pattern[1:]}")
         is_chinese = get_chinese_ratio(word)>0.5
         all_words = []
         for sentence in sentences:
             sentence_list = sentence[3:]
-            for s in sentence_list:
+            for sentence in sentence_list:
                 if is_chinese:
                     jieba.add_word(word)
-                    s_cut = jieba.lcut(s)
+                    s_cut = jieba.lcut(sentence)
                     jieba.del_word(word)
                 else:
-                    texts = deepcopy(s)
-                    words = []
-                    phrase_iterator = pattern.finditer(s)
-                    for phrase in phrase_iterator:
-                        word = phrase.group()
-                        words.append(word)
-                        texts = re.sub(word, "", texts)
-                    words2 = texts.split(" ")
-                    words2 = [word for word in words2 if word.strip() != ""]
-                    words.extend(words2)
-                    s_cut = words
+                    s_cut = []
+                    phrase_iterator = pattern.finditer(sentence)
+                    last_end = 0
+                    for phrase_sre in phrase_iterator:
+                        start = phrase_sre.start()
+                        end = phrase_sre.end()
+                        phrase_prefix_str = sentence[last_end:start]
+                        phrase_prefix = [w for w in phrase_prefix_str.split(" ") if w.strip() != ""]
+                        s_cut.extend(phrase_prefix)
+                        phrase = phrase_sre.group()
+                        s_cut.append(phrase)
+                        last_end = end
+                    phrase_suffix_str = sentence[last_end:]
+                    phrase_suffix = [w for w in phrase_suffix_str.split(" ") if w.strip() != ""]
+                    s_cut.extend(phrase_suffix)
                 if not word in s_cut:
                     continue
                 index = s_cut.index(word)

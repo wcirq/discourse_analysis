@@ -20,9 +20,15 @@ def read_txt(filename_path):
         with open(filename_path, "rb") as infile:
             lines = infile.readlines()
             datas = [data.decode(encoding) for data in lines]
-        datas = [data.strip("\n") for data in datas]
+        # datas = [data.strip("\n") for data in datas]
+        # datas = "".join(datas)
+        # datas = re.split('[。.！!?？；;]', datas)
         datas = "".join(datas)
-        datas = re.split('[,。.，！!?？；;]', datas)
+        datas = re.sub("[\n|\r]", "", datas)
+        # 按符号切分文章
+        datas = re.split('[。.，,！!?？；;]', datas)
+        # 去掉空字符串和去掉首尾空格
+        datas = [data.strip() for data in datas if data != ""]
     except Exception as e:
         logger.error(filename_path)
         return [""]
@@ -40,7 +46,7 @@ def log_likelihood(l1, l2):
 
 def pretreatment_texts(texts):
     pattern = re.compile(
-        u'―|\r|\t|\n|\.|-|:|;|\)|\(|\?|《|》|\[|\]|"|,|，|。|？|；|#|“|”|％|…|．|【|】|：|«|»|—')  # 定义正则表达式匹配模式，不能去掉空格
+        u'―|\r|\t|\n|-|:|\)|\(|《|》|\[|\]|"|#|“|”|％|…|【|】|：|«|»|—')  # 定义正则表达式匹配模式，不能去掉空格
     if isinstance(texts, list):
         texts = [re.sub(pattern, '', text) for text in texts]  # 将符合模式的字符去除
     else:
@@ -48,17 +54,18 @@ def pretreatment_texts(texts):
     return texts
 
 
-def get_chinese_ratio(text):
+def get_chinese_ratio(text, num=300):
     """
     判断字符串中，中文的占比
+    :param num:
     :param char: 字符串
     :return:总的
     """
     if isinstance(text, list):
         text = " ".join(text)
-    text = text[:100]
+    text = text[:num]
     count = 0
-    total = len(text)
+    total = len(re.sub(" ", "", text))
     if total == 0:
         return 0
     for item in text:
