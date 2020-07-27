@@ -14,17 +14,17 @@ from nlp.util import get_chinese_ratio
 
 class MatchAnalysis(object):
 
-    def __init__(self, document_search:DocumentSearch=None):
+    def __init__(self, document_search: DocumentSearch = None):
         if document_search is None:
             document_search = DocumentSearch()
         self.document_search = document_search
 
     def analysis(self, sentences, word, num, pattern=None):
         if pattern is None:
-            pattern = re.compile("\(" + '|'.join([word]) + "\)")
+            pattern = re.compile("[ ](" + '|'.join([word]) + ")[ ]")
         else:
             pattern = re.compile(f"{pattern.pattern[:1]}{word}|{pattern.pattern[1:]}")
-        is_chinese = get_chinese_ratio(word)>0.5
+        is_chinese = get_chinese_ratio(word) > 0.5
         all_words = []
         for sentence in sentences:
             sentence_list = sentence[3:]
@@ -35,7 +35,7 @@ class MatchAnalysis(object):
                     jieba.del_word(word)
                 else:
                     s_cut = []
-                    phrase_iterator = pattern.finditer(sentence)
+                    phrase_iterator = pattern.finditer(f" {sentence} ")
                     last_end = 0
                     for phrase_sre in phrase_iterator:
                         start = phrase_sre.start()
@@ -44,6 +44,7 @@ class MatchAnalysis(object):
                         phrase_prefix = [w for w in phrase_prefix_str.split(" ") if w.strip() != ""]
                         s_cut.extend(phrase_prefix)
                         phrase = phrase_sre.group()
+                        phrase = phrase.strip()
                         s_cut.append(phrase)
                         last_end = end
                     phrase_suffix_str = sentence[last_end:]
@@ -52,8 +53,8 @@ class MatchAnalysis(object):
                 if not word in s_cut:
                     continue
                 index = s_cut.index(word)
-                s = max(index-num, 0)
-                e = index+num
+                s = max(index - num, 0)
+                e = index + num
                 words = s_cut[s:e]
                 words.remove(word)
                 all_words.extend(words)
@@ -70,7 +71,7 @@ class MatchAnalysis(object):
         :return:
         """
         if pattern is None:
-            pattern = re.compile("\(" + '|'.join([]) + "\)")
+            pattern = re.compile("[ ](" + '|'.join([]) + ")[ ]")
         if document_search is None:
             document_search = self.document_search
         if sentences is None:
