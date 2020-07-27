@@ -40,7 +40,7 @@ class DocumentSearch():
             raw = open(document_path, 'rb').read(bytes)
             result = chardet.detect(raw)
             encoding = result['encoding']
-            ncoding = "gbk" if encoding=='GB2312' else encoding
+            encoding = "gbk" if encoding=='GB2312' else encoding
             with open(document_path, "rb") as infile:
                 datas = infile.readlines()
                 datas = [data.decode(encoding) for data in datas]
