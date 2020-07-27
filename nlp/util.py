@@ -16,7 +16,7 @@ def read_txt(filename_path):
         raw = open(filename_path, 'rb').read(bytes)
         result = chardet.detect(raw)
         encoding = result['encoding']
-
+        encoding = "gbk" if encoding=='GB2312' else encoding
         with open(filename_path, "rb") as infile:
             lines = infile.readlines()
             datas = [data.decode(encoding) for data in lines]
@@ -72,3 +72,7 @@ def get_chinese_ratio(text, num=300):
         if 0x4E00 <= ord(item) <= 0x9FA5:
             count += 1
     return count / total
+
+
+if __name__ == '__main__':
+    read_txt("./2019_3a0.txt")

@@ -23,7 +23,7 @@ class MatchAnalysis(object):
         if pattern is None:
             pattern = re.compile("[ ](" + '|'.join([word]) + ")[ ]")
         else:
-            pattern = re.compile(f"{pattern.pattern[:1]}{word}|{pattern.pattern[1:]}")
+            pattern = re.compile(f"{pattern.pattern[:4]}{word}|{pattern.pattern[4:]}")
         is_chinese = get_chinese_ratio(word) > 0.5
         all_words = []
         for sentence in sentences:
@@ -58,8 +58,9 @@ class MatchAnalysis(object):
                 words = s_cut[s:e]
                 words.remove(word)
                 all_words.extend(words)
-        dic_word_count = Counter(all_words)
-        dic_word_count_sort = sorted(dic_word_count.items(), key=lambda d: d[1], reverse=False)
+        dict_word_count = Counter(all_words)
+        dict_word_count = {k: v for k, v in dict_word_count.items() if k != ""}
+        dic_word_count_sort = sorted(dict_word_count.items(), key=lambda d: d[1], reverse=False)
         return dic_word_count_sort
 
     def match(self, word, num=5, sentences=None, document_search=None, pattern=None):

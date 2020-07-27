@@ -90,6 +90,7 @@ def read_corpus_file(corpus_path, max_num=500):
         raw = open(document_path, 'rb').read(bytes)
         result = chardet.detect(raw)
         encoding = result['encoding']
+        encoding = "gbk" if encoding=='GB2312' else encoding
         with open(document_path, "r", encoding=encoding) as f:
             try:
                 result = f.readlines()
