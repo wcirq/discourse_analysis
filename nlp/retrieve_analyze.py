@@ -57,11 +57,11 @@ class DocumentSearch():
         """
         sentences = []
         if isinstance(document_texts, list):
-            document_texts = "。".join(document_texts)
+            document_texts = "".join(document_texts)
         # 将\n\r去掉
         document_texts = re.sub("[\n|\r]", "", document_texts)
         # 按符号切分文章
-        sentences = re.split('[,。.，！!?？；;]', document_texts)
+        sentences = re.split('[。.,，！!?？；;]', document_texts)
         # 去掉空字符串和去掉首尾空格
         sentences = [sentence.strip() for sentence in sentences if sentence != ""]
         return sentences
@@ -113,7 +113,9 @@ class DocumentSearch():
                 self.index[word] = [dic_word_count[word]]
 
     def compile_pattern(self):
-        self.pattern = re.compile("\(" + '|'.join(self.participles) + "\)")
+        # 按字符串长度从大到小排序，匹配短语时会有限匹配较长的短语
+        participles = sorted(self.participles, key=lambda x:len(x), reverse=True)
+        self.pattern = re.compile("(" + '|'.join(participles) + ")")
 
     def read_index(self):
         with open(self.index_path, 'rb')as f:
@@ -131,7 +133,7 @@ class DocumentSearch():
 
     def build_index(self):
         field_names = os.listdir(self.root)
-        for field_name in tqdm(field_names[:5], desc="field"):
+        for field_name in tqdm(field_names[:2], desc="field"):
             field_path = os.path.join(self.root, field_name)
             if os.path.isfile(field_path):
                 continue
@@ -184,21 +186,28 @@ class DocumentSearch():
         if get_chinese_ratio(query) > 0.5:
             words = jieba.Tokenizer.lcut(tokenizer, query)
         else:
-            texts = deepcopy(query)
             words = []
             phrase_iterator = self.pattern.finditer(query)
+            last_end = 0
             for phrase in phrase_iterator:
+                start = phrase.start()
+                end = phrase.end()
+                texts_prefix = query[last_end:start]
+                words_prefix = [w for w in texts_prefix.split(" ") if w.strip()!=""]
+                words.extend(words_prefix)
                 word = phrase.group()
                 words.append(word)
-                texts = re.sub(word, "", texts)
-            words2 = texts.split(" ")
-            words2 = [word for word in words2 if word.strip() != ""]
-            words.extend(words2)
+                last_end = end
+            texts_suffix = query[last_end:]
+            words_suffix = [w for w in texts_suffix.split(" ") if w.strip() != ""]
+            words.extend(words_suffix)
         words = set(words)
         results = {}
         for word in words:
             if word in self.index:
                 results[word] = self.index[word]
+            # else:
+            #     results[word] = []
         return results
 
     def get_sentence(self, datas, num=10):
