@@ -114,7 +114,7 @@ class DocumentSearch():
 
     def compile_pattern(self):
         # 按字符串长度从大到小排序，匹配短语时会有限匹配较长的短语
-        participles = sorted(self.participles, key=lambda x:len(x), reverse=True)
+        participles = sorted(self.participles, key=lambda x: len(x), reverse=True)
         self.pattern = re.compile("[ ](" + '|'.join(participles) + ")[ ]")
 
     def read_index(self):
@@ -193,7 +193,7 @@ class DocumentSearch():
                 start = phrase.start()
                 end = phrase.end()
                 texts_prefix = query[last_end:start]
-                words_prefix = [w for w in texts_prefix.split(" ") if w.strip()!=""]
+                words_prefix = [w for w in texts_prefix.split(" ") if w.strip() != ""]
                 words.extend(words_prefix)
                 word = phrase.group()
                 word = word.strip()

@@ -30,9 +30,17 @@ class MatchAnalysis(object):
             sentence_list = sentence[3:]
             for sentence in sentence_list:
                 if is_chinese:
-                    jieba.add_word(word)
-                    s_cut = jieba.lcut(sentence)
-                    jieba.del_word(word)
+                    # jieba.add_word(word)
+                    # s_cut = jieba.lcut(sentence)
+                    # jieba.del_word(word)
+                    s_cut = []
+                    start = sentence.index(word)
+                    end = start + len(word)
+                    prefix_s = sentence[:start]
+                    suffix_s = sentence[end:]
+                    s_cut.extend(jieba.lcut(prefix_s))
+                    s_cut.append(word)
+                    s_cut.extend(jieba.lcut(suffix_s))
                 else:
                     s_cut = []
                     phrase_iterator = pattern.finditer(f" {sentence} ")
@@ -52,6 +60,7 @@ class MatchAnalysis(object):
                     s_cut.extend(phrase_suffix)
                 if not word in s_cut:
                     continue
+                s_cut = [s for s in s_cut if s.strip() != ""]
                 index = s_cut.index(word)
                 s = max(index - num, 0)
                 e = index + num
